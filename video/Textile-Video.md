@@ -1,0 +1,121 @@
+# 增加视频支持方案
+
+## 图片上传
+
+> photos/App/Components/PhotoKeyboard.tsx:submit
+>> PhotosKeyboard.props.sharePhoto
+>>> UIActions.initShareRequest
+>>>> groupActions.addPhoto.sharePhotoRequest
+>
+> photos/App/features/group/add-photo/sagas.ts:bootstrapPhotoProcessing
+>> watcher
+>>
+>> processPending
+>>
+>> queryForNewPhotos
+>>
+>> **monitorSharedPhotos**
+>>> handleSharedPhoto
+>>>> photoHandler
+>>>>> actions.photoProcessingBegan
+>>>>>
+>>>>> addPhoto
+>>>>>> Textile.files.addFiles
+>>>>>> react-native-sdk/src/file.ts:addFiles
+>>>>>>> react-native-sdk/android/.../FileBridge.java:addFiles
+>>>>>>>> android-textile/textile/.../Files.java:addFiles
+>>>>>>>>> go-textile/mobile/files.go:addFiles
+>>>>>>>>>> buildDirectory
+>>>>>>>>>> - m.node.Thread(threadId)； node是core中的Textile类，Thread则是Textile类中包括的Thread。这里通过调用core的对外接口类获得Thread。
+>>>>>>>>>> - mil, err := getMill(thrd.Schema.Mill, thrd.Schema.Opts)； 根据Schema的信息来获取对应的mill接口，在 getMill 函数中，传输的 Opts 进一步作为了 Mill 接口所使用的参数，也就是说 Schema 同时起到了配置 Mill 的作用。
+>>>>>>>>>> - conf, err := m.getFileConfig(mil, fileConfigOpt.Data(data),fileConfigOpt.Path(path), fileConfigOpt.Plaintext(thrd.Schema.Plaintext),)；  
+>>>>>>>>>> - added, err := m.node.AddFileIndex(mil, *conf); 该函数是core中向IPFS节点添加函数的核心函数，它首先调用mill.Mill()预处理文件，然后调用ipfs.AddData()来添加文件。
+>>>>>>>>>>
+>>>>>>>>>> writeFiles
+>>>>>>>>>>> go-textile/core/thread_files.go:AddFiles
+>>>>>>>>>>>> commitBlock
+>>>>>>>>>>>>
+>>>>>>>>>>>> processFileData
+>>>>>>>>>>>>
+>>>>>>>>>>>> cafeReqFileData
+>>>>>>>>>>>>> cafeOutbox.Add
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> cafeReqFileNode
+>>>>>>>>>>>>
+>>>>>>>>>>>> addBlock
+>>>>>>>>>>>>
+>>>>>>>>>>>> indexBlock
+>>>>>>>>>>>>
+>>>>>>>>>>>> indexFileData
+>>>>>
+>>>>> cleanup
+>> 
+>> monitorRetrySharePhoto
+
+## Thread 创建
+
+>
+> mobile/thread.go/AddThread
+>
+
+## FFmpeg
+
+FFmpeg是一个处理音视频转码流化的工具。它可以从任何输入源，例如文件、pipes、视频流、硬件设备等获取输入，然后向任意输出端输出。其主要模块包括：
+
+- libavformat 用于处理各种音视频格式(multiplexing and demultiplexing)。
+- libavcodec
+
+### 命令行工具
+
+命令行工具的基本语法为
+
+```bash
+ffmpeg [global_options] {[input_file_options] -i input_url} ... {[output_file_options] output_url} ... 
+```
+
+命令中任何无法被解析的参数都将作为output url。在选定输入的时候，多个输入由0开始的序号区分。而如果一个输入文件中有多个流，则用冒号区分不同的流，例如<code>2:3</code>指的是第三个文件里的第四个流。另外，指令中的参数只作用于接下来的一个文件。
+
+ffmpeg的基本处理流程为
+
+```
+ _______              ______________
+|       |            |              |
+| input |  demuxer   | encoded data |   decoder
+| file  | ---------> | packets      | -----+
+|_______|            |______________|      |
+                                           v
+                                       _________
+                                      |         |
+                                      | decoded |
+                                      | frames  |
+                                      |_________|
+ ________             ______________       |
+|        |           |              |      |
+| output | <-------- | encoded data | <----+
+| file   |   muxer   | packets      |   encoder
+|________|           |______________|
+```
+
+其核心逻辑在于，首先得到<code>decoded frames</code>，然后如果需要对视频进行各种处理，例如滤波、提取帧、改变帧数等等，都直接对其进行操作，然后再对处理好的<code>decoded frames</code>进行编码打包。这样就保证了，输入输出格式和内部处理格式的分离。
+
+### 码率控制
+
+<details>
+<summary>关于码率</summary>
+
+>[参考链接 VBR调整方式](https://slhck.info/video/2017/02/24/vbr-settings.html)
+>
+>[参考链接 码率介绍](https://slhck.info/video/2017/03/01/rate-control.html)
+>
+>[参考链接 CRF介绍](https://slhck.info/video/2017/02/24/crf-guide.html)
+>
+>码率指的是，音视频**编码器（encoder）**所决定的每帧画面所使用的比特数。
+>
+>VBR：Variable Bit Rate，动态比特率，编码时根据数据复杂程度决定使用什么比特率。
+>CBR：COnstant Bit Rate，固定码率，固定采样率的压缩方式，效果不理想，已被VBR取代。
+>
+>码率控制模式：
+>
+</details>
+
+FFmpeg提供控制VBR、CBR码率的接口。
