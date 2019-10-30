@@ -1,0 +1,9 @@
+| NAME| IP             | IPFS Addr | TOKEN | PEER ID |
+| ----| ----           | ----   | ---- | ----|
+| HW1 | 159.138.41.111 | -|-|-|
+| HW2 | 159.138.3.74   |-|-|-|
+| HW3 | 159.138.132.28 |/ip4/159.138.132.28/tcp/48487/ipfs/12D3KooWHS9NbK2N7uPtYoQ3YPtFCgPX9G138REeJ1QxMTGuvpxc| 6kCnzeBvbcGU6xNjAscBJj1zGe4WgCLyAw4iPfig3bphyimcaC9PrUC7Q8ZG|12D3KooWHS9NbK2N7uPtYoQ3YPtFCgPX9G138REeJ1QxMTGuvpxc|
+| HW4 | 159.138.130.106|/ip4/159.138.130.106/tcp/36387/ipfs/12D3KooWGsaEnG3tZyWwBXqfm8wd93WogDeLarMQetPdVzwZFLc1|-|-|
+| HW5 | 159.138.130.129|/ip4/159.138.130.129/tcp/4277/ipfs/12D3KooWDZuZ8sppVD37gAZVYbNrfUNqSyT2Ra8wDLXifuEgDQvC|-|-|
+| HW6 | 159.138.58.61  |/ip4/159.138.58.61/tcp/41806/ipfs/12D3KooWBZ8UJeFcK7VgyrNk5s3M2PRpfpTzb1LJqMYazC3NDX8e|-|-|
+| 100 | 202.120.38.100 |/ip4/202.120.38.100/tcp/22612/ipfs/12D3KooWMsnTufaczYVEMYEo3q3PP9XrkJvHMEfQark6sZoEVm9U|-|-|
