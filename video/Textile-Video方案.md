@@ -1,4 +1,5 @@
 # 增加视频支持方案
+> 通过ffmpeg视频切分，通过fileObserver监测文件生成，文件生成同时上传ipfs并更新cafe节点
 
 1.	视频meta上传thread
 	```
@@ -17,28 +18,33 @@
 		          switch(event) {    
 			             case FileObserver.CLOSE:   
 				                Log.d("CLOSE", "path:"+ path);   
+				                TODO: publish video chunk
 				                break;   
 		          }   
 	        } 
 	}
 	```
-4.	视频片meta上传ipfs，生成视频片哈希地址
+4.	视频片段上传ipfs，生成视频片哈希地址
 	```
-	ipfs.Publish(ts)
+	hash := ipfs.Publish(ts)
 	```
-5.	视频片meta上传cafe
+5.	视频片段meta上传cafe
 	```
 	Textile.instance().PublishVideo(ts)
 	```
 6.	对端通过thread获取视频meta
 	```
-	case pb.ThreadVideo
+	case pb.ThreadVideo:
+			t.Add(video)
 	```
-7.	对端通过视频id获取视频片meta
+7.	对端通过视频id获取视频片段meta
 	```
-	Textile.search(v)
+	chunkList := searchVideo(query)
 	```
-8.	对端下载视频片
+8.	对端下载视频片段
 	```
-	ipfs.DataAtPath(hash)
+	for _, chunk := range chunkList {
+			data := ipfs.DataAtPath(chunk.hash)
+			save(data, chunk.name)
+    }
 	```
