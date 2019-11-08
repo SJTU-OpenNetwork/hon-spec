@@ -1,4 +1,5 @@
 # 增加视频支持方案
+> 通过ffmpeg视频切分，通过fileObserver监测文件生成，文件生成同时上传ipfs并更新cafe节点
 
 1.	本地数据库存储视频信息, 并上传cafe节点
 	```
@@ -33,7 +34,8 @@
 
 5.	对端通过thread获取视频meta
 	```
-	case pb.ThreadVideo
+	case pb.ThreadVideo:
+		//get video
 	```
 6.	对端通过视频id获取视频片meta
 	```
