@@ -1,44 +1,59 @@
 # 增加视频支持方案
 
-1.	视频meta上传thread
+1.	本地数据库存储视频信息, 并上传cafe节点
 	```
-	func (t *Thread) AddVideo(video *pb.Video) (mh.Multihash, error)
+	Textile.instance().videos.addVideo(video)
+	Textile.instance().videos.publishVideo(video)
 	```
-2.	视频流化
+2.	视频meta上传thread
+	```
+	Textile.instance().videos.threadAddVideo(threadId, videoId)
+	```
+3.	视频流化
 	```
 	ffmpeg -i $video -c copy -bsf:v h264_mp4toannexb -map 0 -f segment -segment_time 10 $path/%d.ts
 	```
 
-3.	安卓监听ts文件生成
+4.	安卓监听ts文件生成
 	```
 	public class VideoFileListener extends FileObserver {
 			@Override  
 	        public void onEvent(int event, String path) {          
 		          switch(event) {    
 			             case FileObserver.CLOSE:   
-				                Log.d("CLOSE", "path:"+ path);   
+				                Log.d("CLOSE", "path:"+ path); 
+				                hash = ipfs.Add(ts) // 新产生的ts文件上传ipfs
+				                Textile.instance().videos.addVideoChunk(ts) //本地存储产生的ts文件信息
+				                Textile.instance().videos.publishVideoChunk(ts)  //将ts文件信息上传cafe节点
 				                break;   
 		          }   
 	        } 
 	}
 	```
-4.	视频片meta上传ipfs，生成视频片哈希地址
-	```
-	ipfs.Publish(ts)
-	```
-5.	视频片meta上传cafe
-	```
-	Textile.instance().PublishVideo(ts)
-	```
-6.	对端通过thread获取视频meta
+
+5.	对端通过thread获取视频meta
 	```
 	case pb.ThreadVideo
 	```
-7.	对端通过视频id获取视频片meta
+6.	对端通过视频id获取视频片meta
 	```
-	Textile.search(v)
+	chunklist <- Textile.instance().videos.searchVideoChunks(query, options)
 	```
-8.	对端下载视频片
+7.	对端下载视频片
 	```
-	ipfs.DataAtPath(hash)
+	for chunk in chunklist {
+		ipfs.Get(chunk.hash)
+	}
 	```
+
+## API
+| API  | 功能 | 参数 | 返回值 |
+| ---- | ---- | ---- | ---- |
+|getVideo|根据id获取Video结构体|String videoId|Video结构体|
+|getVideoChunk|根据id获取VideoChunk结构体|String videoId, String chunk|VideoChunk结构体|
+|addVideo|本地存储Video结构体|Video video|-|
+|addVideoChunk|本地存储VideoChunk结构体|VideoChunk vchunk|-|
+|publishVideo|Cafe存储Video结构体|Video video|-|
+|publishVideoChunk|Cafe存储VideoChunk结构体|VideoChunk vchunk|-|
+|threadAddVideo|发送视频到Thread|String threadId, String VideoId|-|
+|searchVideoChunks|搜索视频块|VideoChunkQuery query, QueryOptions options|SearchHandle|
